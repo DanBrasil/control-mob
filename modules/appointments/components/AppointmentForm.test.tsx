@@ -14,9 +14,12 @@ describe("AppointmentForm", () => {
       />,
     );
 
-    const dateInputs = getAllByPlaceholderText("AAAA-MM-DDTHH:mm");
-    fireEvent.changeText(getByPlaceholderText("Ex.: Retorno pós-consulta"), "Retorno clínico");
-    fireEvent.changeText(dateInputs[0], "2026-04-30T10:30");
+    const dateInputs = getAllByPlaceholderText("DD/MM/AAAA HH:mm");
+    fireEvent.changeText(
+      getByPlaceholderText("Ex.: Retorno pós-consulta"),
+      "Retorno clínico",
+    );
+    fireEvent.changeText(dateInputs[0], "300420261030");
     fireEvent.press(getByText("Salvar agendamento"));
 
     await waitFor(() => {
@@ -42,15 +45,20 @@ describe("AppointmentForm", () => {
       />,
     );
 
-    const dateInputs = getAllByPlaceholderText("AAAA-MM-DDTHH:mm");
-    fireEvent.changeText(getByPlaceholderText("Ex.: Retorno pós-consulta"), "Retorno");
-    fireEvent.changeText(dateInputs[0], "2026-04-30T10:00");
-    fireEvent.changeText(dateInputs[1], "2026-04-30T09:00");
+    const dateInputs = getAllByPlaceholderText("DD/MM/AAAA HH:mm");
+    fireEvent.changeText(
+      getByPlaceholderText("Ex.: Retorno pós-consulta"),
+      "Retorno",
+    );
+    fireEvent.changeText(dateInputs[0], "300420261000");
+    fireEvent.changeText(dateInputs[1], "300420260900");
 
     fireEvent.press(getByText("Salvar agendamento"));
 
     await waitFor(() => {
-      expect(getByText("Data final não pode ser menor que data inicial.")).toBeTruthy();
+      expect(
+        getByText("Data final não pode ser menor que data inicial."),
+      ).toBeTruthy();
     });
     expect(onSubmit).not.toHaveBeenCalled();
   });

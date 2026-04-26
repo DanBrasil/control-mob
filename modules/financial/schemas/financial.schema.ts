@@ -1,14 +1,12 @@
 import { z } from "zod";
 
 import { FINANCIAL_KINDS } from "@/modules/financial/types/financial.types";
+import { normalizeDateTimeInput } from "@/shared/utils/date";
 
-const parseableDate = (value: string) => !Number.isNaN(Date.parse(value));
+const parseableDate = (value: string) => normalizeDateTimeInput(value) !== null;
 
 export const financialEntrySchema = z.object({
-  title: z
-    .string()
-    .trim()
-    .min(3, "Título deve ter ao menos 3 caracteres."),
+  title: z.string().trim().min(3, "Título deve ter ao menos 3 caracteres."),
   amount: z
     .number({ error: "Valor é obrigatório." })
     .positive("Valor deve ser maior que zero."),

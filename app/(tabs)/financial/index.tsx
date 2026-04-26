@@ -13,7 +13,13 @@ import {
   FinancialKind,
 } from "@/modules/financial/types/financial.types";
 import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
-import { toISODate, toPtBrDateTime } from "@/shared/utils/date";
+import {
+  formatDateForPtBrInput,
+  maskPtBrDateInput,
+  normalizeDateInput,
+  toISODate,
+  toPtBrDateTime,
+} from "@/shared/utils/date";
 import {
   getErrorMessage,
   reportNonSensitiveError,
@@ -35,9 +41,17 @@ export default function FinancialScreen() {
   const [totals, setTotals] = useState({ entradas: 0, saidas: 0, saldo: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [startDate, setStartDate] = useState(toISODate());
-  const [endDate, setEndDate] = useState(
-    toISODate(new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)),
+  const initialStartDate = toISODate();
+  const initialEndDate = toISODate(
+    new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+  );
+  const [startDate, setStartDate] = useState(initialStartDate);
+  const [endDate, setEndDate] = useState(initialEndDate);
+  const [startDateInput, setStartDateInput] = useState(
+    formatDateForPtBrInput(initialStartDate),
+  );
+  const [endDateInput, setEndDateInput] = useState(
+    formatDateForPtBrInput(initialEndDate),
   );
   const [kind, setKind] = useState<FinancialKind | undefined>();
 
@@ -76,19 +90,39 @@ export default function FinancialScreen() {
       <View style={styles.filters}>
         <Input
           label="De"
-          placeholder="AAAA-MM-DD"
-          value={startDate}
-          onChangeText={setStartDate}
+          placeholder="DD/MM/AAAA"
+          value={startDateInput}
+          onChangeText={(value) => {
+            const masked = maskPtBrDateInput(value);
+            const normalized = normalizeDateInput(masked);
+
+            setStartDateInput(masked);
+
+            if (normalized) {
+              setStartDate(normalized);
+            }
+          }}
           autoCapitalize="none"
           autoCorrect={false}
+          keyboardType="number-pad"
         />
         <Input
           label="Até"
-          placeholder="AAAA-MM-DD"
-          value={endDate}
-          onChangeText={setEndDate}
+          placeholder="DD/MM/AAAA"
+          value={endDateInput}
+          onChangeText={(value) => {
+            const masked = maskPtBrDateInput(value);
+            const normalized = normalizeDateInput(masked);
+
+            setEndDateInput(masked);
+
+            if (normalized) {
+              setEndDate(normalized);
+            }
+          }}
           autoCapitalize="none"
           autoCorrect={false}
+          keyboardType="number-pad"
         />
       </View>
 

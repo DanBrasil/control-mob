@@ -11,6 +11,10 @@ import {
   settingsFormSchema,
   SettingsFormValues,
 } from "@/modules/settings/schemas/settings.schema";
+import {
+  maskBusinessHoursInput,
+  normalizeBusinessHoursInput,
+} from "@/shared/utils/date";
 
 type Props = {
   defaultValues: SettingsFormValues;
@@ -97,8 +101,11 @@ export function SettingsForm({
             placeholder="08:00-18:00"
             autoCapitalize="none"
             autoCorrect={false}
+            keyboardType="number-pad"
             value={field.value ?? ""}
-            onChangeText={field.onChange}
+            onChangeText={(value) =>
+              field.onChange(maskBusinessHoursInput(value))
+            }
             onBlur={field.onBlur}
             error={errors.default_business_hours?.message}
           />
@@ -108,7 +115,15 @@ export function SettingsForm({
       <View style={styles.action}>
         <Button
           label="Salvar configuracoes"
-          onPress={handleSubmit(async (values) => onSubmit(values))}
+          onPress={handleSubmit(async (values) =>
+            onSubmit({
+              ...values,
+              default_business_hours:
+                normalizeBusinessHoursInput(
+                  values.default_business_hours ?? "",
+                ) ?? values.default_business_hours,
+            }),
+          )}
           loading={loading || isSubmitting}
         />
       </View>

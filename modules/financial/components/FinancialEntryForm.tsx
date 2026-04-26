@@ -12,6 +12,11 @@ import {
   FINANCIAL_KINDS,
   FinancialKind,
 } from "@/modules/financial/types/financial.types";
+import {
+  formatDateTimeForPtBrInput,
+  maskPtBrDateTimeInput,
+  normalizeDateTimeInput,
+} from "@/shared/utils/date";
 
 type Props = {
   defaultValues?: Partial<FinancialEntryFormValues>;
@@ -41,7 +46,7 @@ export function FinancialEntryForm({
       title: defaultValues?.title ?? "",
       amount: defaultValues?.amount,
       kind: defaultValues?.kind ?? "entrada",
-      entry_date: defaultValues?.entry_date ?? "",
+      entry_date: formatDateTimeForPtBrInput(defaultValues?.entry_date ?? ""),
       notes: defaultValues?.notes ?? "",
     },
   });
@@ -89,12 +94,15 @@ export function FinancialEntryForm({
         render={({ field }) => (
           <Input
             label="Data do lançamento"
-            placeholder="AAAA-MM-DDTHH:mm"
+            placeholder="DD/MM/AAAA HH:mm"
             value={field.value}
-            onChangeText={field.onChange}
+            onChangeText={(value) =>
+              field.onChange(maskPtBrDateTimeInput(value))
+            }
             onBlur={field.onBlur}
             autoCapitalize="none"
             autoCorrect={false}
+            keyboardType="number-pad"
             error={errors.entry_date?.message}
           />
         )}
@@ -160,7 +168,13 @@ export function FinancialEntryForm({
 
       <Button
         label={submitLabel}
-        onPress={handleSubmit((values) => onSubmit(values))}
+        onPress={handleSubmit((values) =>
+          onSubmit({
+            ...values,
+            entry_date:
+              normalizeDateTimeInput(values.entry_date) ?? values.entry_date,
+          }),
+        )}
         loading={loading || isSubmitting}
       />
     </View>

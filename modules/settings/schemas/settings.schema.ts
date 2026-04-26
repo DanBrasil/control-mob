@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import { APPOINTMENT_STATUSES } from "@/modules/appointments/types/appointment.types";
 import { FINANCIAL_KINDS } from "@/modules/financial/types/financial.types";
+import { normalizeBusinessHoursInput } from "@/shared/utils/date";
 
 const optionalIsoDate = z
   .string()
@@ -51,9 +52,16 @@ export const settingsFormSchema = z.object({
     .trim()
     .optional()
     .refine(
-      (value) => !value || /^\d{2}:\d{2}-\d{2}:\d{2}$/.test(value),
+      (value) => !value || normalizeBusinessHoursInput(value) !== null,
       "Horario deve estar no formato HH:mm-HH:mm.",
-    ),
+    )
+    .transform((value) => {
+      if (!value) {
+        return value;
+      }
+
+      return normalizeBusinessHoursInput(value) ?? value;
+    }),
 });
 
 const patientBackupSchema = z.object({

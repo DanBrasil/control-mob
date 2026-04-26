@@ -7,12 +7,21 @@ describe("FinancialEntryForm", () => {
     const onSubmit = jest.fn().mockResolvedValue(undefined);
 
     const { getByText, getByPlaceholderText } = render(
-      <FinancialEntryForm onSubmit={onSubmit} defaultValues={{ kind: "entrada" }} />,
+      <FinancialEntryForm
+        onSubmit={onSubmit}
+        defaultValues={{ kind: "entrada" }}
+      />,
     );
 
-    fireEvent.changeText(getByPlaceholderText("Ex.: Consulta particular"), "Consulta");
+    fireEvent.changeText(
+      getByPlaceholderText("Ex.: Consulta particular"),
+      "Consulta",
+    );
     fireEvent.changeText(getByPlaceholderText("Ex.: 150.00"), "100,5");
-    fireEvent.changeText(getByPlaceholderText("AAAA-MM-DDTHH:mm"), "2026-04-30T08:00");
+    fireEvent.changeText(
+      getByPlaceholderText("DD/MM/AAAA HH:mm"),
+      "300420260800",
+    );
     fireEvent.press(getByText("Salvar lançamento"));
 
     await waitFor(() => {
@@ -30,12 +39,21 @@ describe("FinancialEntryForm", () => {
     const onSubmit = jest.fn().mockResolvedValue(undefined);
 
     const { getByText, getByPlaceholderText } = render(
-      <FinancialEntryForm onSubmit={onSubmit} defaultValues={{ kind: "entrada" }} />,
+      <FinancialEntryForm
+        onSubmit={onSubmit}
+        defaultValues={{ kind: "entrada" }}
+      />,
     );
 
-    fireEvent.changeText(getByPlaceholderText("Ex.: Consulta particular"), "Consulta");
+    fireEvent.changeText(
+      getByPlaceholderText("Ex.: Consulta particular"),
+      "Consulta",
+    );
     fireEvent.changeText(getByPlaceholderText("Ex.: 150.00"), "0");
-    fireEvent.changeText(getByPlaceholderText("AAAA-MM-DDTHH:mm"), "2026-04-30T08:00");
+    fireEvent.changeText(
+      getByPlaceholderText("DD/MM/AAAA HH:mm"),
+      "300420260800",
+    );
     fireEvent.press(getByText("Salvar lançamento"));
 
     await waitFor(() => {

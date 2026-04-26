@@ -13,6 +13,11 @@ import {
   AppointmentPatientOption,
   AppointmentStatus,
 } from "@/modules/appointments/types/appointment.types";
+import {
+  formatDateTimeForPtBrInput,
+  maskPtBrDateTimeInput,
+  normalizeDateTimeInput,
+} from "@/shared/utils/date";
 
 type Props = {
   patients: AppointmentPatientOption[];
@@ -45,8 +50,8 @@ export function AppointmentForm({
       patient_id: defaultValues?.patient_id,
       title: defaultValues?.title ?? "",
       notes: defaultValues?.notes ?? "",
-      start_date: defaultValues?.start_date ?? "",
-      end_date: defaultValues?.end_date ?? "",
+      start_date: formatDateTimeForPtBrInput(defaultValues?.start_date ?? ""),
+      end_date: formatDateTimeForPtBrInput(defaultValues?.end_date ?? ""),
       status: defaultValues?.status ?? "agendado",
     },
   });
@@ -114,12 +119,15 @@ export function AppointmentForm({
         render={({ field }) => (
           <Input
             label="Início"
-            placeholder="AAAA-MM-DDTHH:mm"
+            placeholder="DD/MM/AAAA HH:mm"
             value={field.value}
-            onChangeText={field.onChange}
+            onChangeText={(value) =>
+              field.onChange(maskPtBrDateTimeInput(value))
+            }
             onBlur={field.onBlur}
             autoCapitalize="none"
             autoCorrect={false}
+            keyboardType="number-pad"
             error={errors.start_date?.message}
           />
         )}
@@ -131,12 +139,15 @@ export function AppointmentForm({
         render={({ field }) => (
           <Input
             label="Fim (opcional)"
-            placeholder="AAAA-MM-DDTHH:mm"
+            placeholder="DD/MM/AAAA HH:mm"
             value={field.value}
-            onChangeText={field.onChange}
+            onChangeText={(value) =>
+              field.onChange(maskPtBrDateTimeInput(value))
+            }
             onBlur={field.onBlur}
             autoCapitalize="none"
             autoCorrect={false}
+            keyboardType="number-pad"
             error={errors.end_date?.message}
           />
         )}
@@ -202,7 +213,16 @@ export function AppointmentForm({
 
       <Button
         label={submitLabel}
-        onPress={handleSubmit((values) => onSubmit(values))}
+        onPress={handleSubmit((values) =>
+          onSubmit({
+            ...values,
+            start_date:
+              normalizeDateTimeInput(values.start_date) ?? values.start_date,
+            end_date: values.end_date
+              ? (normalizeDateTimeInput(values.end_date) ?? values.end_date)
+              : "",
+          }),
+        )}
         loading={loading || isSubmitting}
       />
     </View>

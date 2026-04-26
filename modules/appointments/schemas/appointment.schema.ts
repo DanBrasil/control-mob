@@ -1,16 +1,14 @@
 import { z } from "zod";
 
 import { APPOINTMENT_STATUSES } from "@/modules/appointments/types/appointment.types";
+import { normalizeDateTimeInput } from "@/shared/utils/date";
 
-const parseableDate = (value: string) => !Number.isNaN(Date.parse(value));
+const parseableDate = (value: string) => normalizeDateTimeInput(value) !== null;
 
 export const appointmentSchema = z
   .object({
     patient_id: z.number().int().positive("Selecione um paciente."),
-    title: z
-      .string()
-      .trim()
-      .min(3, "Título deve ter ao menos 3 caracteres."),
+    title: z.string().trim().min(3, "Título deve ter ao menos 3 caracteres."),
     notes: z
       .string()
       .trim()
@@ -25,7 +23,10 @@ export const appointmentSchema = z
       .string()
       .trim()
       .optional()
-      .refine((value) => !value || parseableDate(value), "Data final inválida."),
+      .refine(
+        (value) => !value || parseableDate(value),
+        "Data final inválida.",
+      ),
     status: z.enum(APPOINTMENT_STATUSES, {
       error: "Selecione um status válido.",
     }),
@@ -35,8 +36,15 @@ export const appointmentSchema = z
       return;
     }
 
-    const start = new Date(values.start_date);
-    const end = new Date(values.end_date);
+    const normalizedStart = normalizeDateTimeInput(values.start_date);
+    const normalizedEnd = normalizeDateTimeInput(values.end_date);
+
+    if (!normalizedStart || !normalizedEnd) {
+      return;
+    }
+
+    const start = new Date(normalizedStart);
+    const end = new Date(normalizedEnd);
 
     if (end < start) {
       ctx.addIssue({
