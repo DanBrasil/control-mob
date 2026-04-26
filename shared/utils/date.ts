@@ -124,6 +124,18 @@ export const formatDateTimeForPtBrInput = (value: string): string => {
   return `${day}/${month}/${year} ${timePart}`;
 };
 
+export const maskTimeInput = (value: string): string => {
+  const digits = value.replace(/\D/g, "").slice(0, 4);
+  const hour = digits.slice(0, 2);
+  const minute = digits.slice(2, 4);
+
+  if (!minute) {
+    return hour;
+  }
+
+  return `${hour}:${minute}`;
+};
+
 export const maskPtBrDateInput = (value: string): string => {
   const digits = value.replace(/\D/g, "").slice(0, 8);
 

@@ -3,7 +3,6 @@ import { Stack } from "expo-router";
 export default function AppointmentsStackLayout() {
   return (
     <Stack>
-      <Stack.Screen name="index" options={{ title: "Agendamentos" }} />
       <Stack.Screen name="create" options={{ title: "Novo agendamento" }} />
       <Stack.Screen
         name="[id]"

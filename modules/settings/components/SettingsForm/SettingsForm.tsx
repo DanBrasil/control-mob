@@ -133,9 +133,9 @@ export function SettingsForm({
 
 const styles = StyleSheet.create({
   form: {
-    gap: 12,
+    gap: 14,
   },
   action: {
-    marginTop: 4,
+    marginTop: 8,
   },
 });

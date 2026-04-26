@@ -1,28 +1,53 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Tabs } from "expo-router";
 
+import { theme } from "@/shared/constants/theme";
+
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: "#1f4db8",
-        tabBarInactiveTintColor: "#64748b",
-        headerStyle: { backgroundColor: "#ffffff" },
-        headerTitleStyle: { fontWeight: "700", color: "#0f172a" },
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textMuted,
+        headerStyle: { backgroundColor: theme.colors.background },
+        headerShadowVisible: false,
+        headerTitleStyle: {
+          fontWeight: "800",
+          color: theme.colors.text,
+          fontSize: 22,
+        },
         tabBarStyle: {
-          backgroundColor: "#ffffff",
-          borderTopColor: "#e2e8f0",
-          height: 64,
-          paddingTop: 6,
+          position: "absolute",
+          left: 12,
+          right: 12,
+          bottom: 22,
+          backgroundColor: "rgba(255,255,255,0.95)",
+          borderTopWidth: 0,
+          borderRadius: 26,
+          height: 68,
+          paddingTop: 8,
+          paddingBottom: 8,
+          shadowColor: "#0f172a",
+          shadowOpacity: 0.12,
+          shadowRadius: 14,
+          shadowOffset: { width: 0, height: 6 },
+          elevation: 8,
+        },
+        tabBarItemStyle: {
+          borderRadius: 16,
+        },
+        tabBarLabelStyle: {
+          fontWeight: "700",
+          fontSize: 10,
         },
       }}
     >
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: "Dashboard",
+          title: "Início",
           tabBarIcon: ({ color }) => (
-            <Ionicons name="stats-chart" size={22} color={color} />
+            <Ionicons name="home" size={22} color={color} />
           ),
         }}
       />
@@ -59,7 +84,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Config.",
+          title: "Mais",
           tabBarIcon: ({ color }) => (
             <Ionicons name="settings" size={22} color={color} />
           ),

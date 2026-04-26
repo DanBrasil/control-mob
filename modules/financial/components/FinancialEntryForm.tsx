@@ -1,8 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
+import { CalendarDatePicker } from "@/components/ui/CalendarDatePicker";
 import { Input } from "@/components/ui/Input";
 import {
   FinancialEntryFormValues,
@@ -12,9 +14,11 @@ import {
   FINANCIAL_KINDS,
   FinancialKind,
 } from "@/modules/financial/types/financial.types";
+import { theme } from "@/shared/constants/theme";
 import {
+  formatDateForPtBrInput,
   formatDateTimeForPtBrInput,
-  maskPtBrDateTimeInput,
+  maskTimeInput,
   normalizeDateTimeInput,
 } from "@/shared/utils/date";
 
@@ -36,9 +40,22 @@ export function FinancialEntryForm({
   submitLabel = "Salvar lançamento",
   onSubmit,
 }: Props) {
+  const initialEntry = useMemo(
+    () => normalizeDateTimeInput(defaultValues?.entry_date ?? ""),
+    [defaultValues?.entry_date],
+  );
+
+  const [selectedDate, setSelectedDate] = useState<string>(
+    initialEntry?.split("T")[0] ?? new Date().toISOString().slice(0, 10),
+  );
+  const [entryTime, setEntryTime] = useState<string>(
+    initialEntry?.split("T")[1] ?? "09:00",
+  );
+
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FinancialEntryFormValues>({
     resolver: zodResolver(financialEntrySchema),
@@ -46,10 +63,17 @@ export function FinancialEntryForm({
       title: defaultValues?.title ?? "",
       amount: defaultValues?.amount,
       kind: defaultValues?.kind ?? "entrada",
-      entry_date: formatDateTimeForPtBrInput(defaultValues?.entry_date ?? ""),
+      entry_date:
+        formatDateTimeForPtBrInput(defaultValues?.entry_date ?? "") ||
+        `${formatDateForPtBrInput(selectedDate)} ${entryTime}`,
       notes: defaultValues?.notes ?? "",
     },
   });
+
+  useEffect(() => {
+    const entryDateTime = `${formatDateForPtBrInput(selectedDate)} ${entryTime}`;
+    setValue("entry_date", entryDateTime, { shouldValidate: true });
+  }, [selectedDate, entryTime, setValue]);
 
   return (
     <View style={styles.form}>
@@ -88,24 +112,21 @@ export function FinancialEntryForm({
         )}
       />
 
-      <Controller
-        control={control}
-        name="entry_date"
-        render={({ field }) => (
-          <Input
-            label="Data do lançamento"
-            placeholder="DD/MM/AAAA HH:mm"
-            value={field.value}
-            onChangeText={(value) =>
-              field.onChange(maskPtBrDateTimeInput(value))
-            }
-            onBlur={field.onBlur}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="number-pad"
-            error={errors.entry_date?.message}
-          />
-        )}
+      <CalendarDatePicker
+        label="Data do lançamento"
+        value={selectedDate}
+        onChange={(date) => setSelectedDate(date)}
+        error={errors.entry_date?.message}
+      />
+
+      <Input
+        label="Horário"
+        placeholder="HH:mm"
+        value={entryTime}
+        onChangeText={(value) => setEntryTime(maskTimeInput(value))}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="number-pad"
       />
 
       <Controller
@@ -183,15 +204,17 @@ export function FinancialEntryForm({
 
 const styles = StyleSheet.create({
   form: {
-    gap: 14,
+    gap: 16,
   },
   fieldGroup: {
     gap: 6,
   },
   label: {
-    fontSize: 13,
-    color: "#475569",
+    fontSize: 12,
+    color: theme.colors.textMuted,
     fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
   kindRow: {
     flexDirection: "row",
@@ -201,32 +224,32 @@ const styles = StyleSheet.create({
   kindItem: {
     minHeight: 42,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
-    borderRadius: 10,
+    borderColor: theme.colors.border,
+    borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: "#ffffff",
     justifyContent: "center",
   },
   kindItemSelected: {
-    borderColor: "#1f4db8",
-    backgroundColor: "#dbe7ff",
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primarySoft,
   },
   kindText: {
-    color: "#334155",
+    color: theme.colors.textMuted,
     fontSize: 13,
     fontWeight: "600",
   },
   kindTextSelected: {
-    color: "#1f4db8",
+    color: theme.colors.primary,
   },
   notesInput: {
-    minHeight: 96,
-    paddingTop: 10,
+    minHeight: 110,
+    paddingTop: 12,
   },
   errorText: {
     fontSize: 12,
-    color: "#dc2626",
-    fontWeight: "500",
+    color: theme.colors.danger,
+    fontWeight: "600",
   },
 });

@@ -1,3 +1,4 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -7,6 +8,7 @@ import { EmptyState } from "@/components/feedback/EmptyState";
 import { LoadingState } from "@/components/feedback/LoadingState";
 import { Button } from "@/components/ui/Button";
 import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
+import { theme } from "@/shared/constants/theme";
 import { useToast } from "@/shared/hooks/useToast";
 import {
   getErrorMessage,
@@ -191,6 +193,25 @@ export function SettingsScreen() {
       <SafeScreen contentStyle={styles.content}>
         <Text style={styles.title}>Configuracoes</Text>
 
+        <View style={styles.profileCard}>
+          <View style={styles.profileAvatar}>
+            <Text style={styles.profileInitials}>AF</Text>
+          </View>
+
+          <View style={styles.profileBody}>
+            <Text style={styles.profileName}>Nathaly Bruza</Text>
+            <Text style={styles.profileMeta}>
+              Psicóloga clínica · CRP 06/12345
+            </Text>
+          </View>
+
+          <Ionicons
+            name="chevron-forward"
+            size={16}
+            color={theme.colors.textMuted}
+          />
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Configuracoes gerais</Text>
           <SettingsForm
@@ -255,17 +276,57 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   title: {
-    fontSize: 24,
-    color: "#0f172a",
+    fontSize: 28,
+    color: theme.colors.text,
     fontWeight: "800",
+    letterSpacing: -0.6,
+  },
+  profileCard: {
+    borderRadius: theme.radii.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: "#ffffff",
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  profileAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
+    backgroundColor: theme.colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileInitials: {
+    color: "#ffffff",
+    fontWeight: "800",
+    fontSize: 16,
+  },
+  profileBody: {
+    flex: 1,
+    gap: 2,
+  },
+  profileName: {
+    fontSize: 16,
+    color: theme.colors.text,
+    fontWeight: "800",
+  },
+  profileMeta: {
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    fontWeight: "600",
   },
   section: {
     gap: 8,
   },
   sectionTitle: {
-    fontSize: 16,
-    color: "#0f172a",
+    fontSize: 13,
+    color: theme.colors.textMuted,
     fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
   loadingWrapper: {
     flex: 1,
@@ -278,5 +339,6 @@ const styles = StyleSheet.create({
     padding: 16,
     justifyContent: "center",
     gap: 12,
+    backgroundColor: theme.colors.background,
   },
 });

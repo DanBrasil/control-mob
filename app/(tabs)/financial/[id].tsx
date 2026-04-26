@@ -13,6 +13,7 @@ import {
   FinancialKind,
 } from "@/modules/financial/types/financial.types";
 import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
+import { theme } from "@/shared/constants/theme";
 import { useToast } from "@/shared/hooks/useToast";
 import { toPtBrDateTime } from "@/shared/utils/date";
 import {
@@ -134,28 +135,30 @@ export default function FinancialDetailsScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f3f6fb",
+    backgroundColor: theme.colors.background,
     padding: 16,
     gap: 12,
   },
   card: {
-    gap: 6,
+    gap: 8,
   },
   title: {
-    fontSize: 20,
-    color: "#0f172a",
-    fontWeight: "700",
+    fontSize: 22,
+    color: theme.colors.text,
+    fontWeight: "800",
     marginBottom: 8,
   },
   label: {
     fontSize: 12,
-    color: "#64748b",
+    color: theme.colors.textMuted,
     textTransform: "uppercase",
     fontWeight: "700",
+    letterSpacing: 0.6,
   },
   value: {
     fontSize: 14,
-    color: "#334155",
+    color: theme.colors.text,
+    fontWeight: "600",
     marginBottom: 4,
   },
 });

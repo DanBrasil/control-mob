@@ -1,11 +1,12 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { LoadingState } from "@/components/feedback/LoadingState";
+import { CalendarDatePicker } from "@/components/ui/CalendarDatePicker";
 import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
 import { financialService } from "@/modules/financial/financial.service";
 import {
   FINANCIAL_KINDS,
@@ -13,13 +14,8 @@ import {
   FinancialKind,
 } from "@/modules/financial/types/financial.types";
 import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
-import {
-  formatDateForPtBrInput,
-  maskPtBrDateInput,
-  normalizeDateInput,
-  toISODate,
-  toPtBrDateTime,
-} from "@/shared/utils/date";
+import { theme } from "@/shared/constants/theme";
+import { toISODate, toPtBrDateTime } from "@/shared/utils/date";
 import {
   getErrorMessage,
   reportNonSensitiveError,
@@ -47,12 +43,6 @@ export default function FinancialScreen() {
   );
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
-  const [startDateInput, setStartDateInput] = useState(
-    formatDateForPtBrInput(initialStartDate),
-  );
-  const [endDateInput, setEndDateInput] = useState(
-    formatDateForPtBrInput(initialEndDate),
-  );
   const [kind, setKind] = useState<FinancialKind | undefined>();
 
   useFocusEffect(
@@ -85,44 +75,37 @@ export default function FinancialScreen() {
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.title}>Financeiro</Text>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.title}>Financeiro</Text>
+          <Text style={styles.subtitle}>ABRIL · 2026</Text>
+        </View>
+
+        <View style={styles.headerActions}>
+          <Pressable style={styles.iconButton}>
+            <Ionicons
+              name="download-outline"
+              size={18}
+              color={theme.colors.textMuted}
+            />
+          </Pressable>
+          <Pressable style={styles.iconButton}>
+            <Ionicons name="filter" size={18} color={theme.colors.textMuted} />
+          </Pressable>
+        </View>
+      </View>
 
       <View style={styles.filters}>
-        <Input
+        <CalendarDatePicker
           label="De"
-          placeholder="DD/MM/AAAA"
-          value={startDateInput}
-          onChangeText={(value) => {
-            const masked = maskPtBrDateInput(value);
-            const normalized = normalizeDateInput(masked);
-
-            setStartDateInput(masked);
-
-            if (normalized) {
-              setStartDate(normalized);
-            }
-          }}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="number-pad"
+          value={startDate}
+          onChange={(date) => setStartDate(date)}
         />
-        <Input
+
+        <CalendarDatePicker
           label="Até"
-          placeholder="DD/MM/AAAA"
-          value={endDateInput}
-          onChangeText={(value) => {
-            const masked = maskPtBrDateInput(value);
-            const normalized = normalizeDateInput(masked);
-
-            setEndDateInput(masked);
-
-            if (normalized) {
-              setEndDate(normalized);
-            }
-          }}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="number-pad"
+          value={endDate}
+          onChange={(date) => setEndDate(date)}
         />
       </View>
 
@@ -167,20 +150,29 @@ export default function FinancialScreen() {
         style={styles.addButton}
         onPress={() => router.push("/(tabs)/financial/create")}
       >
-        <Text style={styles.addLabel}>+ Novo lançamento</Text>
+        <Ionicons name="add" size={16} color="#ffffff" />
+        <Text style={styles.addLabel}>Novo lançamento</Text>
       </Pressable>
 
-      <Card style={styles.card}>
-        <Text style={styles.label}>Entradas</Text>
-        <Text style={styles.value}>R$ {totals.entradas.toFixed(2)}</Text>
-      </Card>
-      <Card style={styles.card}>
-        <Text style={styles.label}>Saídas</Text>
-        <Text style={styles.value}>R$ {totals.saidas.toFixed(2)}</Text>
-      </Card>
-      <Card style={styles.card}>
-        <Text style={styles.label}>Saldo</Text>
-        <Text style={styles.value}>R$ {totals.saldo.toFixed(2)}</Text>
+      <Card style={styles.balanceCard}>
+        <Text style={styles.balanceLabel}>Saldo do mês</Text>
+        <Text style={styles.balanceValue}>R$ {totals.saldo.toFixed(2)}</Text>
+
+        <View style={styles.summaryRow}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryKey}>Entradas</Text>
+            <Text style={[styles.summaryValue, styles.summaryValueIn]}>
+              R$ {totals.entradas.toFixed(2)}
+            </Text>
+          </View>
+
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryKey}>Saídas</Text>
+            <Text style={[styles.summaryValue, styles.summaryValueOut]}>
+              R$ {totals.saidas.toFixed(2)}
+            </Text>
+          </View>
+        </View>
       </Card>
 
       {loading ? <LoadingState label="Buscando lançamentos..." /> : null}
@@ -228,17 +220,87 @@ export default function FinancialScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f3f6fb",
+    backgroundColor: theme.colors.background,
     padding: 16,
     gap: 10,
   },
-  title: {
-    fontSize: 24,
-    color: "#0f172a",
-    fontWeight: "800",
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  card: {
-    gap: 5,
+  headerActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ffffff",
+  },
+  title: {
+    fontSize: theme.typography.h1.size,
+    color: theme.colors.text,
+    fontWeight: theme.typography.h1.weight,
+    letterSpacing: -0.6,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    fontWeight: "700",
+    letterSpacing: 1,
+  },
+  balanceCard: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+    ...theme.shadows.glowPrimary,
+  },
+  balanceLabel: {
+    fontSize: 12,
+    color: "#ffffff",
+    opacity: 0.85,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+  },
+  balanceValue: {
+    fontSize: 30,
+    color: "#ffffff",
+    fontWeight: "800",
+    marginTop: 2,
+  },
+  summaryRow: {
+    marginTop: 14,
+    flexDirection: "row",
+    gap: 10,
+  },
+  summaryItem: {
+    flex: 1,
+    borderRadius: 14,
+    padding: 10,
+    backgroundColor: "rgba(255,255,255,0.2)",
+  },
+  summaryKey: {
+    fontSize: 11,
+    color: "#ffffff",
+    opacity: 0.9,
+    fontWeight: "700",
+  },
+  summaryValue: {
+    fontSize: 14,
+    fontWeight: "800",
+    marginTop: 4,
+  },
+  summaryValueIn: {
+    color: "#d1fae5",
+  },
+  summaryValueOut: {
+    color: "#ffe4e6",
   },
   filters: {
     gap: 10,
@@ -251,7 +313,7 @@ const styles = StyleSheet.create({
   kindButton: {
     minHeight: 40,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
+    borderColor: theme.colors.border,
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -259,42 +321,35 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   kindButtonActive: {
-    borderColor: "#1f4db8",
-    backgroundColor: "#dbe7ff",
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primarySoft,
   },
   kindButtonText: {
-    color: "#334155",
+    color: theme.colors.textMuted,
     fontWeight: "600",
     fontSize: 12,
   },
   kindButtonTextActive: {
-    color: "#1f4db8",
+    color: theme.colors.primary,
   },
   addButton: {
-    minHeight: 44,
-    borderRadius: 12,
-    backgroundColor: "#dbe7ff",
+    minHeight: 52,
+    borderRadius: 16,
+    backgroundColor: theme.colors.primary,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+    ...theme.shadows.glowPrimary,
   },
   addLabel: {
-    fontSize: 14,
-    color: "#1f4db8",
-    fontWeight: "700",
-  },
-  label: {
-    fontSize: 14,
-    color: "#475569",
-    fontWeight: "600",
-  },
-  value: {
-    fontSize: 22,
-    color: "#1f4db8",
+    fontSize: 15,
+    color: "#ffffff",
     fontWeight: "800",
   },
   listContent: {
     gap: 10,
-    paddingBottom: 24,
+    paddingBottom: 140,
   },
   entryCard: {
     gap: 4,
@@ -306,9 +361,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   entryTitle: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "800",
     flex: 1,
   },
   entryKind: {
@@ -316,12 +371,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   entryMeta: {
-    color: "#475569",
-    fontSize: 13,
+    color: theme.colors.textMuted,
+    fontSize: 12,
+    fontWeight: "600",
   },
   entryAmount: {
-    color: "#0f172a",
+    color: theme.colors.text,
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 });

@@ -1,5 +1,7 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text } from "react-native";
 
+import { theme } from "@/shared/constants/theme";
+
 type Variant = "primary" | "outline" | "danger";
 
 type Props = {
@@ -14,9 +16,21 @@ const variantStyles: Record<
   Variant,
   { bg: string; border: string; text: string }
 > = {
-  primary: { bg: "#1f4db8", border: "#1f4db8", text: "#ffffff" },
-  outline: { bg: "#ffffff", border: "#1f4db8", text: "#1f4db8" },
-  danger: { bg: "#b91c1c", border: "#b91c1c", text: "#ffffff" },
+  primary: {
+    bg: theme.colors.primary,
+    border: theme.colors.primary,
+    text: "#ffffff",
+  },
+  outline: {
+    bg: "#ffffff",
+    border: theme.colors.primarySoft,
+    text: theme.colors.primary,
+  },
+  danger: {
+    bg: theme.colors.danger,
+    border: theme.colors.danger,
+    text: "#ffffff",
+  },
 };
 
 export function Button({
@@ -53,15 +67,16 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 48,
-    borderRadius: 12,
+    minHeight: 52,
+    borderRadius: 16,
     borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
+    ...theme.shadows.md,
   },
   label: {
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 });

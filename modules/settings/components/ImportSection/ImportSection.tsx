@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { theme } from "@/shared/constants/theme";
 
 type Props = {
   selectedFileName: string;
@@ -73,32 +74,32 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   title: {
-    fontSize: 18,
-    color: "#0f172a",
+    fontSize: 16,
+    color: theme.colors.text,
     fontWeight: "800",
   },
   description: {
     fontSize: 13,
-    color: "#475569",
+    color: theme.colors.textMuted,
     lineHeight: 19,
   },
   fileArea: {
     borderWidth: 1,
-    borderColor: "#dbe4f0",
-    borderRadius: 10,
-    backgroundColor: "#f8fbff",
+    borderColor: theme.colors.border,
+    borderRadius: 16,
+    backgroundColor: "#f8fafc",
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 2,
   },
   fileLabel: {
     fontSize: 12,
-    color: "#64748b",
+    color: theme.colors.textMuted,
     fontWeight: "600",
   },
   fileName: {
     fontSize: 13,
-    color: "#0f172a",
+    color: theme.colors.text,
     fontWeight: "600",
   },
   actions: {

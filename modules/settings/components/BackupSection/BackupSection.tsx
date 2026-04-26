@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { theme } from "@/shared/constants/theme";
 
 type Props = {
   loading?: boolean;
@@ -28,13 +29,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   title: {
-    fontSize: 18,
-    color: "#0f172a",
+    fontSize: 16,
+    color: theme.colors.text,
     fontWeight: "800",
   },
   description: {
     fontSize: 13,
-    color: "#475569",
+    color: theme.colors.textMuted,
     lineHeight: 19,
   },
   action: {

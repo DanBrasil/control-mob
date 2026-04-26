@@ -98,10 +98,10 @@ export function PatientForm({
 
 const styles = StyleSheet.create({
   form: {
-    gap: 14,
+    gap: 16,
   },
   notesInput: {
-    minHeight: 96,
-    paddingTop: 10,
+    minHeight: 110,
+    paddingTop: 12,
   },
 });

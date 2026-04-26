@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Mente — App moderno</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+<style>
+  body { background: #ece9e1; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  /* Wrapper that hosts our custom screen inside the IOS/Android device frame */
+  .device-pair { display: flex; gap: 28px; align-items: flex-start; }
+  .device-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: rgba(60, 50, 40, 0.55); font-weight: 700;
+    margin-bottom: 8px; text-align: center;
+  }
+  .device-col { display: flex; flex-direction: column; align-items: center; }
+</style>
+</head>
+<body>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<div id="root"></div>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="android-frame.jsx"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// Default tweak values — wrapped so the host can persist edits.
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "density": "comfort",
+  "radius": "round",
+  "cards": "soft",
+  "tabbar": "floating"
+}/*EDITMODE-END*/;
+
+/* ─── Wrapper that injects a custom screen into a device frame, bypassing
+   the frame's built-in nav/title/keyboard chrome. ─── */
+function IPhone({ children }) {
+  return (
+    <IOSDevice>
+      {/* iOS frame has an absolute status bar (~62px) at the top.
+          Pad our content down so titles don't overlap with time/battery. */}
+      <div style={{ width: '100%', height: '100%', paddingTop: 62 }}>{children}</div>
+    </IOSDevice>
+  );
+}
+
+function Android({ children }) {
+  return (
+    <AndroidDevice>
+      {/* Android status bar is 40px and sits in the flex column above content,
+          so no extra padding needed — but a small top gap helps breathing room. */}
+      <div style={{ width: '100%', height: '100%', paddingTop: 4 }}>{children}</div>
+    </AndroidDevice>
+  );
+}
+
+/* The IOSDevice / AndroidDevice components have their own status bars baked
+   in. Our screen sits below that and uses the rest of the height. */
+
+function ScreenPair({ name, tweaks }) {
+  return (
+    <div className={`device-pair m-density-${tweaks.density} m-radius-${tweaks.radius} m-cards-${tweaks.cards}`}>
+      <div className="device-col">
+        <div className="device-label">iPhone</div>
+        <IPhone>
+          <Screen name={name} tabVariant={tweaks.tabbar} />
+        </IPhone>
+      </div>
+      <div className="device-col">
+        <div className="device-label">Android</div>
+        <Android>
+          <Screen name={name} tabVariant={tweaks.tabbar} />
+        </Android>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  return (
+    <>
+      <DesignCanvas>
+        <DCSection id="main" title="Mente" subtitle="App de gestão para psicólogos clínicos · Dashboard, Pacientes, Agenda, Financeiro, Configurações">
+          <DCArtboard id="dashboard" label="Dashboard" width={500} height={920}>
+            <ScreenPair name="dashboard" tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="patients" label="Pacientes" width={500} height={920}>
+            <ScreenPair name="patients" tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="agenda" label="Agenda" width={500} height={920}>
+            <ScreenPair name="agenda" tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="financial" label="Financeiro" width={500} height={920}>
+            <ScreenPair name="financial" tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="settings" label="Configurações" width={500} height={920}>
+            <ScreenPair name="settings" tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="detail" title="Telas secundárias" subtitle="Detalhe e criação">
+          <DCArtboard id="patient-detail" label="Detalhe do paciente" width={500} height={920}>
+            <ScreenPair name="patient" tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="new-appt" label="Novo agendamento" width={500} height={920}>
+            <ScreenPair name="newappt" tweaks={tweaks} />
+          </DCArtboard>
+          <DCArtboard id="new-tx" label="Nova transação financeira" width={500} height={920}>
+            <ScreenPair name="newtx" tweaks={tweaks} />
+          </DCArtboard>
+        </DCSection>
+
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Layout">
+          <TweakRadio
+            label="Densidade"
+            value={tweaks.density}
+            onChange={(v) => setTweak('density', v)}
+            options={[
+              { label: 'Compacto', value: 'compact' },
+              { label: 'Confortável', value: 'comfort' },
+              { label: 'Espaçoso', value: 'spacious' },
+            ]}
+          />
+          <TweakRadio
+            label="Cantos"
+            value={tweaks.radius}
+            onChange={(v) => setTweak('radius', v)}
+            options={[
+              { label: 'Suaves', value: 'soft' },
+              { label: 'Arredondados', value: 'round' },
+              { label: 'Pílula', value: 'pill' },
+            ]}
+          />
+        </TweakSection>
+
+        <TweakSection title="Cards">
+          <TweakRadio
+            label="Estilo"
+            value={tweaks.cards}
+            onChange={(v) => setTweak('cards', v)}
+            options={[
+              { label: 'Flat', value: 'flat' },
+              { label: 'Soft', value: 'soft' },
+              { label: 'Elevado', value: 'elev' },
+            ]}
+          />
+        </TweakSection>
+
+        <TweakSection title="Tab bar">
+          <TweakRadio
+            label="Variante"
+            value={tweaks.tabbar}
+            onChange={(v) => setTweak('tabbar', v)}
+            options={[
+              { label: 'Clássica', value: 'classic' },
+              { label: 'Flutuante', value: 'floating' },
+              { label: 'Com FAB', value: 'fab' },
+            ]}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

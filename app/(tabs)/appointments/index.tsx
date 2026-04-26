@@ -1,11 +1,12 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { LoadingState } from "@/components/feedback/LoadingState";
+import { CalendarDatePicker } from "@/components/ui/CalendarDatePicker";
 import { Card } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
 import { appointmentsService } from "@/modules/appointments/appointments.service";
 import {
   APPOINTMENT_STATUSES,
@@ -13,13 +14,8 @@ import {
   AppointmentStatus,
 } from "@/modules/appointments/types/appointment.types";
 import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
-import {
-  formatDateForPtBrInput,
-  maskPtBrDateInput,
-  normalizeDateInput,
-  toISODate,
-  toPtBrDateTime,
-} from "@/shared/utils/date";
+import { theme } from "@/shared/constants/theme";
+import { toISODate, toPtBrDateTime } from "@/shared/utils/date";
 import {
   getErrorMessage,
   reportNonSensitiveError,
@@ -48,12 +44,6 @@ export default function AppointmentsScreen() {
   );
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
-  const [startDateInput, setStartDateInput] = useState(
-    formatDateForPtBrInput(initialStartDate),
-  );
-  const [endDateInput, setEndDateInput] = useState(
-    formatDateForPtBrInput(initialEndDate),
-  );
   const [status, setStatus] = useState<AppointmentStatus | undefined>();
 
   const loadAppointments = async () => {
@@ -83,44 +73,33 @@ export default function AppointmentsScreen() {
 
   return (
     <View style={styles.screen}>
-      <Text style={styles.title}>Agendamentos</Text>
+      <View style={styles.headerRow}>
+        <View>
+          <Text style={styles.title}>Agenda</Text>
+          <Text style={styles.subtitle}>ABRIL · 2026</Text>
+        </View>
+
+        <View style={styles.headerActions}>
+          <Pressable style={styles.iconButton}>
+            <Ionicons name="search" size={18} color={theme.colors.textMuted} />
+          </Pressable>
+          <Pressable style={styles.iconButton}>
+            <Ionicons name="filter" size={18} color={theme.colors.textMuted} />
+          </Pressable>
+        </View>
+      </View>
 
       <View style={styles.filters}>
-        <Input
+        <CalendarDatePicker
           label="De"
-          placeholder="DD/MM/AAAA"
-          value={startDateInput}
-          onChangeText={(value) => {
-            const masked = maskPtBrDateInput(value);
-            const normalized = normalizeDateInput(masked);
-
-            setStartDateInput(masked);
-
-            if (normalized) {
-              setStartDate(normalized);
-            }
-          }}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="number-pad"
+          value={startDate}
+          onChange={(date) => setStartDate(date)}
         />
-        <Input
+
+        <CalendarDatePicker
           label="Até"
-          placeholder="DD/MM/AAAA"
-          value={endDateInput}
-          onChangeText={(value) => {
-            const masked = maskPtBrDateInput(value);
-            const normalized = normalizeDateInput(masked);
-
-            setEndDateInput(masked);
-
-            if (normalized) {
-              setEndDate(normalized);
-            }
-          }}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="number-pad"
+          value={endDate}
+          onChange={(date) => setEndDate(date)}
         />
       </View>
 
@@ -169,7 +148,8 @@ export default function AppointmentsScreen() {
         style={styles.addButton}
         onPress={() => router.push("/(tabs)/appointments/create")}
       >
-        <Text style={styles.addLabel}>+ Novo agendamento</Text>
+        <Ionicons name="add" size={16} color="#ffffff" />
+        <Text style={styles.addLabel}>Novo agendamento</Text>
       </Pressable>
 
       {loading ? <LoadingState label="Buscando agendamentos..." /> : null}
@@ -192,17 +172,17 @@ export default function AppointmentsScreen() {
             >
               <Card style={styles.card}>
                 <View style={styles.cardTop}>
-                  <Text style={styles.cardTitle}>{item.title}</Text>
+                  <Text style={styles.cardTime}>
+                    {toPtBrDateTime(item.start_date)}
+                  </Text>
                   <Text
                     style={[styles.badge, { color: statusColors[item.status] }]}
                   >
                     {statusLabel[item.status]}
                   </Text>
                 </View>
+                <Text style={styles.cardTitle}>{item.title}</Text>
                 <Text style={styles.meta}>{item.patient_name}</Text>
-                <Text style={styles.meta}>
-                  {toPtBrDateTime(item.start_date)}
-                </Text>
               </Card>
             </Pressable>
           )}
@@ -215,14 +195,40 @@ export default function AppointmentsScreen() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#f3f6fb",
+    backgroundColor: theme.colors.background,
     padding: 16,
     gap: 12,
   },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  headerActions: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ffffff",
+  },
   title: {
-    fontSize: 24,
-    color: "#0f172a",
-    fontWeight: "800",
+    fontSize: theme.typography.h1.size,
+    color: theme.colors.text,
+    fontWeight: theme.typography.h1.weight,
+    letterSpacing: -0.6,
+  },
+  subtitle: {
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    fontWeight: "700",
+    letterSpacing: 1,
   },
   filters: {
     gap: 10,
@@ -233,45 +239,48 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statusButton: {
-    minHeight: 40,
+    minHeight: 42,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
+    borderColor: theme.colors.border,
     borderRadius: 999,
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingVertical: 8,
     backgroundColor: "#ffffff",
     justifyContent: "center",
   },
   statusButtonActive: {
-    borderColor: "#1f4db8",
-    backgroundColor: "#dbe7ff",
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primarySoft,
   },
   statusButtonText: {
-    color: "#334155",
+    color: theme.colors.textMuted,
     fontWeight: "600",
     fontSize: 12,
   },
   statusButtonTextActive: {
-    color: "#1f4db8",
+    color: theme.colors.primary,
   },
   addButton: {
-    minHeight: 44,
-    borderRadius: 12,
-    backgroundColor: "#dbe7ff",
+    minHeight: 52,
+    borderRadius: 16,
+    backgroundColor: theme.colors.primary,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+    ...theme.shadows.glowPrimary,
   },
   addLabel: {
-    fontSize: 14,
-    color: "#1f4db8",
-    fontWeight: "700",
+    fontSize: 15,
+    color: "#ffffff",
+    fontWeight: "800",
   },
   listContent: {
     gap: 10,
-    paddingBottom: 20,
+    paddingBottom: 140,
   },
   card: {
-    gap: 4,
+    gap: 6,
   },
   cardTop: {
     flexDirection: "row",
@@ -279,15 +288,21 @@ const styles = StyleSheet.create({
     gap: 10,
     alignItems: "center",
   },
-  cardTitle: {
-    fontSize: 16,
-    color: "#0f172a",
+  cardTime: {
+    fontSize: 11,
+    color: theme.colors.textMuted,
     fontWeight: "700",
     flex: 1,
   },
+  cardTitle: {
+    fontSize: 16,
+    color: theme.colors.text,
+    fontWeight: "800",
+  },
   meta: {
-    fontSize: 13,
-    color: "#475569",
+    fontSize: 12,
+    color: theme.colors.textMuted,
+    fontWeight: "600",
   },
   badge: {
     fontSize: 12,
