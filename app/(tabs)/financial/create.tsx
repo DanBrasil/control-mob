@@ -1,23 +1,37 @@
 import { useRouter } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 
+import { SafeScreen } from "@/components/SafeScreen";
 import { FinancialEntryForm } from "@/modules/financial/components/FinancialEntryForm";
-import { FinancialEntryFormValues } from "@/modules/financial/schemas/financial.schema";
 import { financialService } from "@/modules/financial/financial.service";
+import { FinancialEntryFormValues } from "@/modules/financial/schemas/financial.schema";
+import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
 import { useToast } from "@/shared/hooks/useToast";
+import {
+  getErrorMessage,
+  reportNonSensitiveError,
+} from "@/shared/utils/error-message";
 
 export default function FinancialCreateScreen() {
   const router = useRouter();
   const toast = useToast();
 
   const handleSubmit = async (values: FinancialEntryFormValues) => {
-    await financialService.create(values);
-    toast.show({ message: "Lançamento salvo com sucesso.", type: "success" });
-    router.replace("/(tabs)/financial");
+    try {
+      await financialService.create(values);
+      toast.show({ message: "Lançamento salvo com sucesso.", type: "success" });
+      router.replace("/(tabs)/financial");
+    } catch (saveError) {
+      reportNonSensitiveError("financial.create", saveError);
+      toast.show({
+        message: getErrorMessage(saveError, FEEDBACK_MESSAGES.genericSaveError),
+        type: "error",
+      });
+    }
   };
 
   return (
-    <View style={styles.screen}>
+    <SafeScreen contentStyle={styles.content}>
       <FinancialEntryForm
         defaultValues={{
           kind: "entrada",
@@ -25,14 +39,12 @@ export default function FinancialCreateScreen() {
         }}
         onSubmit={handleSubmit}
       />
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#f3f6fb",
-    padding: 16,
+  content: {
+    gap: 10,
   },
 });

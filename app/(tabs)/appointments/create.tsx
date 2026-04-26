@@ -1,26 +1,45 @@
-import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import { StyleSheet } from "react-native";
 
+import { SafeScreen } from "@/components/SafeScreen";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { LoadingState } from "@/components/feedback/LoadingState";
+import { appointmentsService } from "@/modules/appointments/appointments.service";
 import { AppointmentForm } from "@/modules/appointments/components/AppointmentForm";
 import { AppointmentFormValues } from "@/modules/appointments/schemas/appointment.schema";
-import { appointmentsService } from "@/modules/appointments/appointments.service";
 import { AppointmentPatientOption } from "@/modules/appointments/types/appointment.types";
 import { patientsService } from "@/modules/patients/patients.service";
+import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
 import { useToast } from "@/shared/hooks/useToast";
+import {
+  getErrorMessage,
+  reportNonSensitiveError,
+} from "@/shared/utils/error-message";
 
 export default function AppointmentCreateScreen() {
   const router = useRouter();
   const toast = useToast();
   const [loading, setLoading] = useState(true);
   const [patients, setPatients] = useState<AppointmentPatientOption[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const load = async () => {
-      const data = await patientsService.list();
-      setPatients(data.map((patient) => ({ id: patient.id, name: patient.name })));
+      setError(null);
+
+      try {
+        const data = await patientsService.list();
+        setPatients(
+          data.map((patient) => ({ id: patient.id, name: patient.name })),
+        );
+      } catch (loadError) {
+        reportNonSensitiveError("appointments.create.load-patients", loadError);
+        setError(
+          getErrorMessage(loadError, FEEDBACK_MESSAGES.genericLoadError),
+        );
+      }
+
       setLoading(false);
     };
 
@@ -28,9 +47,20 @@ export default function AppointmentCreateScreen() {
   }, []);
 
   const handleSubmit = async (values: AppointmentFormValues) => {
-    await appointmentsService.create(values);
-    toast.show({ message: "Agendamento salvo com sucesso.", type: "success" });
-    router.replace("/(tabs)/appointments");
+    try {
+      await appointmentsService.create(values);
+      toast.show({
+        message: "Agendamento salvo com sucesso.",
+        type: "success",
+      });
+      router.replace("/(tabs)/appointments");
+    } catch (saveError) {
+      reportNonSensitiveError("appointments.create.save", saveError);
+      toast.show({
+        message: getErrorMessage(saveError, FEEDBACK_MESSAGES.genericSaveError),
+        type: "error",
+      });
+    }
   };
 
   if (loading) {
@@ -39,17 +69,20 @@ export default function AppointmentCreateScreen() {
 
   if (!patients.length) {
     return (
-      <View style={styles.screen}>
+      <SafeScreen contentStyle={styles.content}>
         <EmptyState
-          title="Cadastre pacientes antes"
-          description="É necessário ter ao menos um paciente para criar agendamentos."
+          title={error ? "Erro" : "Cadastre pacientes antes"}
+          description={
+            error ??
+            "É necessário ter ao menos um paciente para criar agendamentos."
+          }
         />
-      </View>
+      </SafeScreen>
     );
   }
 
   return (
-    <View style={styles.screen}>
+    <SafeScreen contentStyle={styles.content}>
       <AppointmentForm
         patients={patients}
         defaultValues={{
@@ -59,14 +92,12 @@ export default function AppointmentCreateScreen() {
         }}
         onSubmit={handleSubmit}
       />
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#f3f6fb",
-    padding: 16,
+  content: {
+    gap: 10,
   },
 });

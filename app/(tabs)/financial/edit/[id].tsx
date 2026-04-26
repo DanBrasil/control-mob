@@ -1,15 +1,21 @@
-import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import { StyleSheet } from "react-native";
 
+import { SafeScreen } from "@/components/SafeScreen";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { LoadingState } from "@/components/feedback/LoadingState";
 import { FinancialEntryForm } from "@/modules/financial/components/FinancialEntryForm";
-import { FinancialEntryFormValues } from "@/modules/financial/schemas/financial.schema";
 import { financialService } from "@/modules/financial/financial.service";
+import { FinancialEntryFormValues } from "@/modules/financial/schemas/financial.schema";
 import { FinancialEntry } from "@/modules/financial/types/financial.types";
+import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
 import { useToast } from "@/shared/hooks/useToast";
 import { toDateTimeInputValue } from "@/shared/utils/date";
+import {
+  getErrorMessage,
+  reportNonSensitiveError,
+} from "@/shared/utils/error-message";
 
 export default function FinancialEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -17,13 +23,24 @@ export default function FinancialEditScreen() {
   const toast = useToast();
   const [item, setItem] = useState<FinancialEntry | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const entryId = Number(id);
 
   useEffect(() => {
     const load = async () => {
-      const current = await financialService.getById(entryId);
-      setItem(current);
+      setError(null);
+
+      try {
+        const current = await financialService.getById(entryId);
+        setItem(current);
+      } catch (loadError) {
+        reportNonSensitiveError("financial.edit.load", loadError);
+        setError(
+          getErrorMessage(loadError, FEEDBACK_MESSAGES.genericLoadError),
+        );
+      }
+
       setLoading(false);
     };
 
@@ -31,9 +48,17 @@ export default function FinancialEditScreen() {
   }, [entryId]);
 
   const handleSubmit = async (values: FinancialEntryFormValues) => {
-    await financialService.update(entryId, values);
-    toast.show({ message: "Lançamento atualizado.", type: "success" });
-    router.replace(`/(tabs)/financial/${entryId}`);
+    try {
+      await financialService.update(entryId, values);
+      toast.show({ message: "Lançamento atualizado.", type: "success" });
+      router.replace(`/(tabs)/financial/${entryId}`);
+    } catch (saveError) {
+      reportNonSensitiveError("financial.edit.save", saveError);
+      toast.show({
+        message: getErrorMessage(saveError, FEEDBACK_MESSAGES.genericSaveError),
+        type: "error",
+      });
+    }
   };
 
   if (loading) {
@@ -42,17 +67,19 @@ export default function FinancialEditScreen() {
 
   if (!item) {
     return (
-      <View style={styles.screen}>
+      <SafeScreen contentStyle={styles.content}>
         <EmptyState
-          title="Lançamento não encontrado"
-          description="Não foi possível carregar esse registro para edição."
+          title={error ? "Erro" : "Lançamento não encontrado"}
+          description={
+            error ?? "Não foi possível carregar esse registro para edição."
+          }
         />
-      </View>
+      </SafeScreen>
     );
   }
 
   return (
-    <View style={styles.screen}>
+    <SafeScreen contentStyle={styles.content}>
       <FinancialEntryForm
         defaultValues={{
           title: item.title,
@@ -64,14 +91,12 @@ export default function FinancialEditScreen() {
         submitLabel="Salvar alterações"
         onSubmit={handleSubmit}
       />
-    </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: "#f3f6fb",
-    padding: 16,
+  content: {
+    gap: 10,
   },
 });

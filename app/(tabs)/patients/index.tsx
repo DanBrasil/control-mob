@@ -8,6 +8,11 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { patientsService } from "@/modules/patients/patients.service";
 import { Patient } from "@/modules/patients/types/patient.types";
+import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
+import {
+  getErrorMessage,
+  reportNonSensitiveError,
+} from "@/shared/utils/error-message";
 
 export default function PatientsListScreen() {
   const router = useRouter();
@@ -24,8 +29,8 @@ export default function PatientsListScreen() {
       const data = await patientsService.list(value);
       setPatients(data);
     } catch (err) {
-      console.error(err);
-      setError("Não foi possível carregar pacientes.");
+      reportNonSensitiveError("patients.list.load", err);
+      setError(getErrorMessage(err, FEEDBACK_MESSAGES.genericLoadError));
     } finally {
       setLoading(false);
     }

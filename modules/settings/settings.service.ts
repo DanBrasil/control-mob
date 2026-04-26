@@ -1,26 +1,69 @@
-import { getDatabase } from "@/services/database";
-import { toISODateTime } from "@/shared/utils/date";
+import { settingsRepository } from "@/modules/settings/repositories/settings.repository";
+import {
+  GeneralSettings,
+  SettingsEntry,
+  SettingsKey,
+} from "@/modules/settings/types/settings.types";
+
+const DEFAULT_SETTINGS: GeneralSettings = {
+  clinic_name: "",
+  currency: "BRL",
+  default_session_minutes: 50,
+  default_business_hours: "",
+};
+
+const toEntries = (settings: GeneralSettings): SettingsEntry[] => [
+  { key: "clinic_name", value: settings.clinic_name },
+  { key: "currency", value: settings.currency },
+  {
+    key: "default_session_minutes",
+    value: String(settings.default_session_minutes),
+  },
+  {
+    key: "default_business_hours",
+    value: settings.default_business_hours ?? "",
+  },
+];
+
+const toSettingsObject = (entries: SettingsEntry[]): GeneralSettings => {
+  const map = new Map(entries.map((entry) => [entry.key, entry.value]));
+
+  return {
+    clinic_name: map.get("clinic_name") ?? DEFAULT_SETTINGS.clinic_name,
+    currency: map.get("currency") ?? DEFAULT_SETTINGS.currency,
+    default_session_minutes: Number(map.get("default_session_minutes") ?? 50),
+    default_business_hours: map.get("default_business_hours") ?? "",
+  };
+};
 
 export const settingsService = {
-  async get(key: string): Promise<string | null> {
-    const db = await getDatabase();
-    const row = await db.getFirstAsync<{ value: string | null }>(
-      "SELECT value FROM settings WHERE key = ? LIMIT 1;",
-      [key],
-    );
-
-    return row?.value ?? null;
+  async get(key: SettingsKey): Promise<string | null> {
+    return settingsRepository.getByKey(key);
   },
 
-  async set(key: string, value: string): Promise<void> {
-    const db = await getDatabase();
-    const now = toISODateTime();
+  async set(key: SettingsKey, value: string): Promise<void> {
+    await settingsRepository.upsertMany([{ key, value }]);
+  },
 
-    await db.runAsync(
-      `INSERT INTO settings (key, value, created_at, updated_at)
-       VALUES (?, ?, ?, ?)
-       ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at;`,
-      [key, value, now, now],
-    );
+  async getGeneralSettings(): Promise<GeneralSettings> {
+    const entries = await settingsRepository.listAll();
+    return toSettingsObject(entries);
+  },
+
+  async saveGeneralSettings(settings: GeneralSettings): Promise<void> {
+    await settingsRepository.upsertMany(toEntries(settings));
+  },
+
+  async listEntries(): Promise<SettingsEntry[]> {
+    return settingsRepository.listAll();
+  },
+
+  async replaceAll(settings: GeneralSettings): Promise<void> {
+    await settingsRepository.clearAll();
+    await settingsRepository.upsertMany(toEntries(settings));
+  },
+
+  getDefaultSettings(): GeneralSettings {
+    return { ...DEFAULT_SETTINGS };
   },
 };

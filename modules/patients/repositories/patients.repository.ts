@@ -1,5 +1,7 @@
 import { getDatabase } from "@/services/database";
+import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
 import { toISODateTime } from "@/shared/utils/date";
+import { reportNonSensitiveError } from "@/shared/utils/error-message";
 
 import {
   CreatePatientInput,
@@ -15,68 +17,117 @@ function mapInput(input: CreatePatientInput | UpdatePatientInput) {
   };
 }
 
+const toRepositoryError = (
+  scope: string,
+  fallbackMessage: string,
+  error: unknown,
+): never => {
+  reportNonSensitiveError(scope, error);
+  throw new Error(fallbackMessage);
+};
+
 export const patientsRepository = {
   async list(search?: string): Promise<Patient[]> {
-    const db = await getDatabase();
+    try {
+      const db = await getDatabase();
 
-    if (!search?.trim()) {
+      if (!search?.trim()) {
+        return db.getAllAsync<Patient>(
+          `SELECT id, name, phone, notes, created_at, updated_at
+           FROM patients
+           ORDER BY name ASC;`,
+        );
+      }
+
       return db.getAllAsync<Patient>(
         `SELECT id, name, phone, notes, created_at, updated_at
          FROM patients
+         WHERE name LIKE ? OR phone LIKE ?
          ORDER BY name ASC;`,
+        [`%${search.trim()}%`, `%${search.trim()}%`],
+      );
+    } catch (error) {
+      return toRepositoryError(
+        "patients.repository.list",
+        FEEDBACK_MESSAGES.genericLoadError,
+        error,
       );
     }
-
-    return db.getAllAsync<Patient>(
-      `SELECT id, name, phone, notes, created_at, updated_at
-       FROM patients
-       WHERE name LIKE ? OR phone LIKE ?
-       ORDER BY name ASC;`,
-      [`%${search.trim()}%`, `%${search.trim()}%`],
-    );
   },
 
   async findById(id: number): Promise<Patient | null> {
-    const db = await getDatabase();
-    const patient = await db.getFirstAsync<Patient>(
-      `SELECT id, name, phone, notes, created_at, updated_at
-       FROM patients
-       WHERE id = ?
-       LIMIT 1;`,
-      [id],
-    );
+    try {
+      const db = await getDatabase();
+      const patient = await db.getFirstAsync<Patient>(
+        `SELECT id, name, phone, notes, created_at, updated_at
+         FROM patients
+         WHERE id = ?
+         LIMIT 1;`,
+        [id],
+      );
 
-    return patient ?? null;
+      return patient ?? null;
+    } catch (error) {
+      return toRepositoryError(
+        "patients.repository.findById",
+        FEEDBACK_MESSAGES.genericLoadError,
+        error,
+      );
+    }
   },
 
   async create(input: CreatePatientInput): Promise<number> {
-    const db = await getDatabase();
-    const now = toISODateTime();
-    const payload = mapInput(input);
+    try {
+      const db = await getDatabase();
+      const now = toISODateTime();
+      const payload = mapInput(input);
 
-    const result = await db.runAsync(
-      `INSERT INTO patients (name, phone, notes, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?);`,
-      [payload.name, payload.phone, payload.notes, now, now],
-    );
+      const result = await db.runAsync(
+        `INSERT INTO patients (name, phone, notes, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?);`,
+        [payload.name, payload.phone, payload.notes, now, now],
+      );
 
-    return result.lastInsertRowId;
+      return result.lastInsertRowId;
+    } catch (error) {
+      return toRepositoryError(
+        "patients.repository.create",
+        FEEDBACK_MESSAGES.genericSaveError,
+        error,
+      );
+    }
   },
 
   async update(id: number, input: UpdatePatientInput): Promise<void> {
-    const db = await getDatabase();
-    const payload = mapInput(input);
+    try {
+      const db = await getDatabase();
+      const payload = mapInput(input);
 
-    await db.runAsync(
-      `UPDATE patients
-       SET name = ?, phone = ?, notes = ?, updated_at = ?
-       WHERE id = ?;`,
-      [payload.name, payload.phone, payload.notes, toISODateTime(), id],
-    );
+      await db.runAsync(
+        `UPDATE patients
+         SET name = ?, phone = ?, notes = ?, updated_at = ?
+         WHERE id = ?;`,
+        [payload.name, payload.phone, payload.notes, toISODateTime(), id],
+      );
+    } catch (error) {
+      return toRepositoryError(
+        "patients.repository.update",
+        FEEDBACK_MESSAGES.genericSaveError,
+        error,
+      );
+    }
   },
 
   async remove(id: number): Promise<void> {
-    const db = await getDatabase();
-    await db.runAsync("DELETE FROM patients WHERE id = ?;", [id]);
+    try {
+      const db = await getDatabase();
+      await db.runAsync("DELETE FROM patients WHERE id = ?;", [id]);
+    } catch (error) {
+      return toRepositoryError(
+        "patients.repository.remove",
+        FEEDBACK_MESSAGES.genericDeleteError,
+        error,
+      );
+    }
   },
 };

@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { ConfirmDialog } from "@/components/feedback/ConfirmDialog";
@@ -12,8 +12,13 @@ import {
   Appointment,
   AppointmentStatus,
 } from "@/modules/appointments/types/appointment.types";
+import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
 import { useToast } from "@/shared/hooks/useToast";
 import { toPtBrDateTime } from "@/shared/utils/date";
+import {
+  getErrorMessage,
+  reportNonSensitiveError,
+} from "@/shared/utils/error-message";
 
 const statusLabel: Record<AppointmentStatus, string> = {
   agendado: "Agendado",
@@ -28,13 +33,22 @@ export default function AppointmentDetailsScreen() {
   const [item, setItem] = useState<Appointment | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const appointmentId = Number(id);
 
   const load = async () => {
     setLoading(true);
-    const current = await appointmentsService.getById(appointmentId);
-    setItem(current);
+    setError(null);
+
+    try {
+      const current = await appointmentsService.getById(appointmentId);
+      setItem(current);
+    } catch (loadError) {
+      reportNonSensitiveError("appointments.details.load", loadError);
+      setError(getErrorMessage(loadError, FEEDBACK_MESSAGES.genericLoadError));
+    }
+
     setLoading(false);
   };
 
@@ -45,10 +59,22 @@ export default function AppointmentDetailsScreen() {
   );
 
   const handleDelete = async () => {
-    await appointmentsService.remove(appointmentId);
-    setConfirmVisible(false);
-    toast.show({ message: "Agendamento removido.", type: "success" });
-    router.replace("/(tabs)/appointments");
+    try {
+      await appointmentsService.remove(appointmentId);
+      setConfirmVisible(false);
+      toast.show({ message: "Agendamento removido.", type: "success" });
+      router.replace("/(tabs)/appointments");
+    } catch (deleteError) {
+      setConfirmVisible(false);
+      reportNonSensitiveError("appointments.details.delete", deleteError);
+      toast.show({
+        message: getErrorMessage(
+          deleteError,
+          FEEDBACK_MESSAGES.genericDeleteError,
+        ),
+        type: "error",
+      });
+    }
   };
 
   if (loading) {
@@ -58,8 +84,8 @@ export default function AppointmentDetailsScreen() {
   if (!item) {
     return (
       <EmptyState
-        title="Agendamento não encontrado"
-        description="Verifique se ele ainda existe no banco local."
+        title={error ? "Erro" : "Agendamento não encontrado"}
+        description={error ?? "Verifique se ele ainda existe no banco local."}
       />
     );
   }
@@ -91,7 +117,11 @@ export default function AppointmentDetailsScreen() {
         variant="outline"
         onPress={() => router.push(`/(tabs)/appointments/edit/${item.id}`)}
       />
-      <Button label="Remover" variant="danger" onPress={() => setConfirmVisible(true)} />
+      <Button
+        label="Remover"
+        variant="danger"
+        onPress={() => setConfirmVisible(true)}
+      />
 
       <ConfirmDialog
         visible={confirmVisible}

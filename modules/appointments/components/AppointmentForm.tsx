@@ -59,7 +59,11 @@ export function AppointmentForm({
         render={({ field }) => (
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Paciente</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsWrap}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chipsWrap}
+            >
               {patients.map((patient) => {
                 const selected = field.value === patient.id;
 
@@ -67,8 +71,15 @@ export function AppointmentForm({
                   <Pressable
                     key={patient.id}
                     style={[styles.chip, selected ? styles.chipSelected : null]}
-                    onPress={() => field.onChange(patient.id)}>
-                    <Text style={[styles.chipText, selected ? styles.chipTextSelected : null]}>
+                    onPress={() => field.onChange(patient.id)}
+                    hitSlop={6}
+                  >
+                    <Text
+                      style={[
+                        styles.chipText,
+                        selected ? styles.chipTextSelected : null,
+                      ]}
+                    >
                       {patient.name}
                     </Text>
                   </Pressable>
@@ -144,9 +155,19 @@ export function AppointmentForm({
                 return (
                   <Pressable
                     key={status}
-                    style={[styles.statusItem, selected ? styles.statusItemSelected : null]}
-                    onPress={() => field.onChange(status)}>
-                    <Text style={[styles.statusText, selected ? styles.statusTextSelected : null]}>
+                    style={[
+                      styles.statusItem,
+                      selected ? styles.statusItemSelected : null,
+                    ]}
+                    onPress={() => field.onChange(status)}
+                    hitSlop={6}
+                  >
+                    <Text
+                      style={[
+                        styles.statusText,
+                        selected ? styles.statusTextSelected : null,
+                      ]}
+                    >
                       {statusLabel[status]}
                     </Text>
                   </Pressable>
@@ -203,14 +224,17 @@ const styles = StyleSheet.create({
   chipsWrap: {
     gap: 8,
     paddingVertical: 4,
+    paddingRight: 8,
   },
   chip: {
+    minHeight: 40,
     borderWidth: 1,
     borderColor: "#cbd5e1",
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
     backgroundColor: "#ffffff",
+    justifyContent: "center",
   },
   chipSelected: {
     borderColor: "#1f4db8",
@@ -230,12 +254,14 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   statusItem: {
+    minHeight: 40,
     borderWidth: 1,
     borderColor: "#cbd5e1",
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 8,
     backgroundColor: "#ffffff",
+    justifyContent: "center",
   },
   statusItemSelected: {
     borderColor: "#1f4db8",

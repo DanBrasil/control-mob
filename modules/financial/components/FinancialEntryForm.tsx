@@ -113,16 +113,28 @@ export function FinancialEntryForm({
                 return (
                   <Pressable
                     key={kind}
-                    style={[styles.kindItem, selected ? styles.kindItemSelected : null]}
-                    onPress={() => field.onChange(kind)}>
-                    <Text style={[styles.kindText, selected ? styles.kindTextSelected : null]}>
+                    style={[
+                      styles.kindItem,
+                      selected ? styles.kindItemSelected : null,
+                    ]}
+                    onPress={() => field.onChange(kind)}
+                    hitSlop={6}
+                  >
+                    <Text
+                      style={[
+                        styles.kindText,
+                        selected ? styles.kindTextSelected : null,
+                      ]}
+                    >
                       {kindLabel[kind]}
                     </Text>
                   </Pressable>
                 );
               })}
             </View>
-            {errors.kind?.message ? <Text style={styles.errorText}>{errors.kind.message}</Text> : null}
+            {errors.kind?.message ? (
+              <Text style={styles.errorText}>{errors.kind.message}</Text>
+            ) : null}
           </View>
         )}
       />
@@ -169,15 +181,18 @@ const styles = StyleSheet.create({
   },
   kindRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
   },
   kindItem: {
+    minHeight: 42,
     borderWidth: 1,
     borderColor: "#cbd5e1",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
     backgroundColor: "#ffffff",
+    justifyContent: "center",
   },
   kindItemSelected: {
     borderColor: "#1f4db8",

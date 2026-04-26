@@ -9,7 +9,12 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { patientsService } from "@/modules/patients/patients.service";
 import { Patient } from "@/modules/patients/types/patient.types";
+import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
 import { useToast } from "@/shared/hooks/useToast";
+import {
+  getErrorMessage,
+  reportNonSensitiveError,
+} from "@/shared/utils/error-message";
 
 export default function PatientDetailsScreen() {
   const router = useRouter();
@@ -18,13 +23,22 @@ export default function PatientDetailsScreen() {
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirmVisible, setConfirmVisible] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const patientId = Number(id);
 
   const load = async () => {
     setLoading(true);
-    const current = await patientsService.getById(patientId);
-    setPatient(current);
+    setError(null);
+
+    try {
+      const current = await patientsService.getById(patientId);
+      setPatient(current);
+    } catch (loadError) {
+      reportNonSensitiveError("patients.details.load", loadError);
+      setError(getErrorMessage(loadError, FEEDBACK_MESSAGES.genericLoadError));
+    }
+
     setLoading(false);
   };
 
@@ -35,10 +49,22 @@ export default function PatientDetailsScreen() {
   );
 
   const handleDelete = async () => {
-    await patientsService.remove(patientId);
-    setConfirmVisible(false);
-    toast.show({ message: "Paciente removido.", type: "success" });
-    router.replace("/(tabs)/patients");
+    try {
+      await patientsService.remove(patientId);
+      setConfirmVisible(false);
+      toast.show({ message: "Paciente removido.", type: "success" });
+      router.replace("/(tabs)/patients");
+    } catch (deleteError) {
+      setConfirmVisible(false);
+      reportNonSensitiveError("patients.details.delete", deleteError);
+      toast.show({
+        message: getErrorMessage(
+          deleteError,
+          FEEDBACK_MESSAGES.genericDeleteError,
+        ),
+        type: "error",
+      });
+    }
   };
 
   if (loading) {
@@ -48,8 +74,8 @@ export default function PatientDetailsScreen() {
   if (!patient) {
     return (
       <EmptyState
-        title="Paciente não encontrado"
-        description="Verifique o cadastro."
+        title={error ? "Erro" : "Paciente não encontrado"}
+        description={error ?? "Verifique o cadastro."}
       />
     );
   }

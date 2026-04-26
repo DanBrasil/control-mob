@@ -12,7 +12,12 @@ import {
   Appointment,
   AppointmentStatus,
 } from "@/modules/appointments/types/appointment.types";
+import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
 import { toISODate, toPtBrDateTime } from "@/shared/utils/date";
+import {
+  getErrorMessage,
+  reportNonSensitiveError,
+} from "@/shared/utils/error-message";
 
 const statusLabel: Record<AppointmentStatus, string> = {
   agendado: "Agendado",
@@ -42,11 +47,15 @@ export default function AppointmentsScreen() {
     setError(null);
 
     try {
-      const data = await appointmentsService.list({ startDate, endDate, status });
+      const data = await appointmentsService.list({
+        startDate,
+        endDate,
+        status,
+      });
       setItems(data);
     } catch (loadError) {
-      console.error(loadError);
-      setError("Não foi possível carregar agendamentos.");
+      reportNonSensitiveError("appointments.list.load", loadError);
+      setError(getErrorMessage(loadError, FEEDBACK_MESSAGES.genericLoadError));
     } finally {
       setLoading(false);
     }
@@ -83,9 +92,19 @@ export default function AppointmentsScreen() {
 
       <View style={styles.statusRow}>
         <Pressable
-          style={[styles.statusButton, !status ? styles.statusButtonActive : null]}
-          onPress={() => setStatus(undefined)}>
-          <Text style={[styles.statusButtonText, !status ? styles.statusButtonTextActive : null]}>
+          style={[
+            styles.statusButton,
+            !status ? styles.statusButtonActive : null,
+          ]}
+          onPress={() => setStatus(undefined)}
+          hitSlop={6}
+        >
+          <Text
+            style={[
+              styles.statusButtonText,
+              !status ? styles.statusButtonTextActive : null,
+            ]}
+          >
             Todos
           </Text>
         </Pressable>
@@ -93,13 +112,19 @@ export default function AppointmentsScreen() {
         {APPOINTMENT_STATUSES.map((itemStatus) => (
           <Pressable
             key={itemStatus}
-            style={[styles.statusButton, status === itemStatus ? styles.statusButtonActive : null]}
-            onPress={() => setStatus(itemStatus)}>
+            style={[
+              styles.statusButton,
+              status === itemStatus ? styles.statusButtonActive : null,
+            ]}
+            onPress={() => setStatus(itemStatus)}
+            hitSlop={6}
+          >
             <Text
               style={[
                 styles.statusButtonText,
                 status === itemStatus ? styles.statusButtonTextActive : null,
-              ]}>
+              ]}
+            >
               {statusLabel[itemStatus]}
             </Text>
           </Pressable>
@@ -108,7 +133,8 @@ export default function AppointmentsScreen() {
 
       <Pressable
         style={styles.addButton}
-        onPress={() => router.push("/(tabs)/appointments/create")}>
+        onPress={() => router.push("/(tabs)/appointments/create")}
+      >
         <Text style={styles.addLabel}>+ Novo agendamento</Text>
       </Pressable>
 
@@ -127,16 +153,22 @@ export default function AppointmentsScreen() {
             />
           }
           renderItem={({ item }) => (
-            <Pressable onPress={() => router.push(`/(tabs)/appointments/${item.id}`)}>
+            <Pressable
+              onPress={() => router.push(`/(tabs)/appointments/${item.id}`)}
+            >
               <Card style={styles.card}>
                 <View style={styles.cardTop}>
                   <Text style={styles.cardTitle}>{item.title}</Text>
-                  <Text style={[styles.badge, { color: statusColors[item.status] }]}>
+                  <Text
+                    style={[styles.badge, { color: statusColors[item.status] }]}
+                  >
                     {statusLabel[item.status]}
                   </Text>
                 </View>
                 <Text style={styles.meta}>{item.patient_name}</Text>
-                <Text style={styles.meta}>{toPtBrDateTime(item.start_date)}</Text>
+                <Text style={styles.meta}>
+                  {toPtBrDateTime(item.start_date)}
+                </Text>
               </Card>
             </Pressable>
           )}
@@ -167,12 +199,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statusButton: {
+    minHeight: 40,
     borderWidth: 1,
     borderColor: "#cbd5e1",
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: "#ffffff",
+    justifyContent: "center",
   },
   statusButtonActive: {
     borderColor: "#1f4db8",

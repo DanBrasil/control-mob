@@ -12,7 +12,12 @@ import {
   FinancialEntry,
   FinancialKind,
 } from "@/modules/financial/types/financial.types";
+import { FEEDBACK_MESSAGES } from "@/shared/constants/feedback-messages";
 import { toISODate, toPtBrDateTime } from "@/shared/utils/date";
+import {
+  getErrorMessage,
+  reportNonSensitiveError,
+} from "@/shared/utils/error-message";
 
 const kindLabel: Record<FinancialKind, string> = {
   entrada: "Entrada",
@@ -51,8 +56,10 @@ export default function FinancialScreen() {
           setItems(entries);
           setTotals(dataTotals);
         } catch (loadError) {
-          console.error(loadError);
-          setError("Não foi possível carregar dados financeiros.");
+          reportNonSensitiveError("financial.list.load", loadError);
+          setError(
+            getErrorMessage(loadError, FEEDBACK_MESSAGES.genericLoadError),
+          );
         } finally {
           setLoading(false);
         }
@@ -88,28 +95,44 @@ export default function FinancialScreen() {
       <View style={styles.kindRow}>
         <Pressable
           style={[styles.kindButton, !kind ? styles.kindButtonActive : null]}
-          onPress={() => setKind(undefined)}>
-          <Text style={[styles.kindButtonText, !kind ? styles.kindButtonTextActive : null]}>
+          onPress={() => setKind(undefined)}
+          hitSlop={6}
+        >
+          <Text
+            style={[
+              styles.kindButtonText,
+              !kind ? styles.kindButtonTextActive : null,
+            ]}
+          >
             Todos
           </Text>
         </Pressable>
         {FINANCIAL_KINDS.map((currentKind) => (
           <Pressable
             key={currentKind}
-            style={[styles.kindButton, kind === currentKind ? styles.kindButtonActive : null]}
-            onPress={() => setKind(currentKind)}>
+            style={[
+              styles.kindButton,
+              kind === currentKind ? styles.kindButtonActive : null,
+            ]}
+            onPress={() => setKind(currentKind)}
+            hitSlop={6}
+          >
             <Text
               style={[
                 styles.kindButtonText,
                 kind === currentKind ? styles.kindButtonTextActive : null,
-              ]}>
+              ]}
+            >
               {kindLabel[currentKind]}
             </Text>
           </Pressable>
         ))}
       </View>
 
-      <Pressable style={styles.addButton} onPress={() => router.push("/(tabs)/financial/create")}>
+      <Pressable
+        style={styles.addButton}
+        onPress={() => router.push("/(tabs)/financial/create")}
+      >
         <Text style={styles.addLabel}>+ Novo lançamento</Text>
       </Pressable>
 
@@ -141,16 +164,24 @@ export default function FinancialScreen() {
             />
           }
           renderItem={({ item }) => (
-            <Pressable onPress={() => router.push(`/(tabs)/financial/${item.id}`)}>
+            <Pressable
+              onPress={() => router.push(`/(tabs)/financial/${item.id}`)}
+            >
               <Card style={styles.entryCard}>
                 <View style={styles.entryTop}>
                   <Text style={styles.entryTitle}>{item.title}</Text>
-                  <Text style={[styles.entryKind, { color: kindColor[item.kind] }]}> 
+                  <Text
+                    style={[styles.entryKind, { color: kindColor[item.kind] }]}
+                  >
                     {kindLabel[item.kind]}
                   </Text>
                 </View>
-                <Text style={styles.entryMeta}>{toPtBrDateTime(item.entry_date)}</Text>
-                <Text style={styles.entryAmount}>R$ {item.amount.toFixed(2)}</Text>
+                <Text style={styles.entryMeta}>
+                  {toPtBrDateTime(item.entry_date)}
+                </Text>
+                <Text style={styles.entryAmount}>
+                  R$ {item.amount.toFixed(2)}
+                </Text>
               </Card>
             </Pressable>
           )}
@@ -184,12 +215,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   kindButton: {
+    minHeight: 40,
     borderWidth: 1,
     borderColor: "#cbd5e1",
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 6,
     backgroundColor: "#ffffff",
+    justifyContent: "center",
   },
   kindButtonActive: {
     borderColor: "#1f4db8",

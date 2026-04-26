@@ -6,6 +6,7 @@ import { LoadingState } from "@/components/feedback/LoadingState";
 import { ToastProvider } from "@/components/feedback/Toast";
 import { Button } from "@/components/ui/Button";
 import { bootstrapDatabase } from "@/services/database";
+import { reportNonSensitiveError } from "@/shared/utils/error-message";
 
 type BootstrapState = "loading" | "error" | "ready";
 
@@ -19,7 +20,7 @@ export function AppProviders({ children }: PropsWithChildren) {
       await bootstrapDatabase();
       setState("ready");
     } catch (error) {
-      console.error("Erro ao inicializar banco de dados:", error);
+      reportNonSensitiveError("app.providers.bootstrap", error);
       setState("error");
     }
   };
